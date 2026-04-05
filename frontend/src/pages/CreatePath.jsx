@@ -12,6 +12,8 @@ const CreatePath = () => {
     skills: "",
     difficultyLevel: "basic",
     duration: "4 weeks",
+    durationValue: "4",
+    durationUnit: "weeks",
     preference: "Both"
   });
 
@@ -105,12 +107,15 @@ const CreatePath = () => {
                 <button 
                   key={l.id}
                   onClick={() => setFormData({ ...formData, difficultyLevel: l.id })}
-                  className={`p-6 text-left border rounded-xl flex items-center gap-4 transition-all ${formData.difficultyLevel === l.id ? 'border-accent bg-accent/10' : 'border-border hover:border-text-muted'}`}
+                  className={`p-6 text-left border-2 rounded-xl flex items-center gap-4 transition-all 
+                    ${formData.difficultyLevel === l.id 
+                      ? 'border-black bg-black text-white shadow-lg' 
+                      : 'border-border bg-white text-gray-700 hover:border-black/50'}`}
                 >
-                  <div className="text-accent">{l.icon}</div>
+                  <div className={formData.difficultyLevel === l.id ? 'text-white' : 'text-primary'}>{l.icon}</div>
                   <div>
-                    <div className="font-bold text-white">{l.label}</div>
-                    <div className="text-sm text-text-muted">{l.desc}</div>
+                    <div className={`font-bold ${formData.difficultyLevel === l.id ? 'text-white' : 'text-gray-900'}`}>{l.label}</div>
+                    <div className={`text-sm ${formData.difficultyLevel === l.id ? 'text-white/70' : 'text-gray-500'}`}>{l.desc}</div>
                   </div>
                 </button>
               ))}
@@ -132,16 +137,40 @@ const CreatePath = () => {
               <Clock /> Set your timeline & preference
             </h3>
             <label className="block text-sm font-bold text-text-muted mb-3">Time Commitment</label>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {["2 weeks", "4 weeks", "2 months", "3 months"].map(d => (
-                <button 
-                  key={d}
-                  onClick={() => setFormData({ ...formData, duration: d })}
-                  className={`p-4 border-2 rounded-xl transition-all font-bold ${formData.duration === d ? 'border-secondary bg-secondary/10 text-secondary' : 'border-white/5 text-text-muted hover:border-white/20'}`}
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1">
+                <input 
+                  type="number" 
+                  min="1"
+                  className="w-full p-4 rounded-xl bg-surface/50 border border-white/10 text-white focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all font-bold"
+                  value={formData.durationValue}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      durationValue: val,
+                      duration: `${val} ${formData.durationUnit}`
+                    });
+                  }}
+                />
+              </div>
+              <div className="w-1/3">
+                <select 
+                  className="w-full p-4 rounded-xl bg-surface/50 border border-white/10 text-white focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all font-bold appearance-none cursor-pointer"
+                  value={formData.durationUnit}
+                  onChange={(e) => {
+                    const unit = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      durationUnit: unit,
+                      duration: `${formData.durationValue} ${unit}`
+                    });
+                  }}
                 >
-                  {d}
-                </button>
-              ))}
+                  <option value="weeks" className="bg-zinc-900">Weeks</option>
+                  <option value="months" className="bg-zinc-900">Months</option>
+                </select>
+              </div>
             </div>
 
             <label className="block text-sm font-bold text-text-muted mb-3">Learning Preference</label>
@@ -149,8 +178,12 @@ const CreatePath = () => {
               {["Video", "Reading", "Both"].map(p => (
                 <button 
                   key={p}
+                  type="button"
                   onClick={() => setFormData({ ...formData, preference: p })}
-                  className={`p-4 border-2 rounded-xl transition-all font-bold ${formData.preference === p ? 'border-secondary bg-secondary/10 text-secondary' : 'border-white/5 text-text-muted hover:border-white/20'}`}
+                  className={`p-4 border-2 rounded-xl transition-all font-bold 
+                    ${formData.preference === p 
+                      ? "!bg-black !text-white border-black shadow-xl scale-105" 
+                      : "!bg-white border-gray-300 !text-gray-600 hover:border-black hover:!text-black"}`}
                 >
                   {p}
                 </button>
@@ -158,10 +191,10 @@ const CreatePath = () => {
             </div>
 
             <div className="p-6 border bg-surface/80 rounded-2xl text-sm border-l-4 border-l-secondary mb-8 shadow-inner border-white/5">
-              <p className="text-white mb-3 font-black tracking-widest uppercase text-xs">Target Summary</p>
-              <p className="text-text-muted leading-relaxed">
-                You will pursue the <span className="text-white font-bold">{formData.role}</span> role at a <span className="text-white font-bold">{formData.difficultyLevel}</span> level over <span className="text-white font-bold">{formData.duration}</span>. 
-                Your curriculum will be strictly generated for <span className="text-white font-bold break-words">{formData.skills}</span>.
+              <p className="text-gray-900 mb-3 font-black tracking-widest uppercase text-xs">Target Summary</p>
+              <p className="text-gray-600 leading-relaxed font-medium">
+                You will pursue the <span className="text-primary font-bold">{formData.role}</span> role at a <span className="text-primary font-bold">{formData.difficultyLevel}</span> level over <span className="text-primary font-bold">{formData.duration}</span>. 
+                Your curriculum will be strictly generated for <span className="text-primary font-bold break-words">{formData.skills}</span>.
               </p>
             </div>
             <div className="flex justify-between">

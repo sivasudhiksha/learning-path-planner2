@@ -79,14 +79,22 @@ const QuizComponent = ({ topic, onComplete }) => {
           <button
             key={idx}
             onClick={() => setSelectedOption(idx)}
-            className={`p-6 text-left rounded-2xl transition-all duration-300 border-2 ${selectedOption === idx ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)] transform scale-[1.02]' : 'border-white/5 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'}`}
+            className={`w-full p-4 md:p-6 text-left rounded-2xl transition-all duration-300 border-2 flex items-center gap-6 !shadow-none !bg-none ${
+              selectedOption === idx 
+                ? 'border-primary !bg-primary/10 text-slate-900 shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)]' 
+                : 'border-slate-200 !bg-white/50 text-slate-600 hover:!bg-white hover:border-slate-300'
+            }`}
           >
-            <div className="flex items-center gap-5">
-              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-all ${selectedOption === idx ? 'border-primary bg-primary text-white shadow-lg' : 'border-text-muted/30 text-text-muted'}`}>
-                {String.fromCharCode(65 + idx)}
-              </div>
-              <span className={`text-[15px] ${selectedOption === idx ? 'text-white font-semibold' : 'text-text-muted'}`}>{opt}</span>
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-black shrink-0 transition-all ${
+              selectedOption === idx 
+                ? 'border-primary bg-primary text-white shadow-lg' 
+                : 'border-slate-300 text-slate-400 bg-white shadow-sm'
+            }`}>
+              {String.fromCharCode(65 + idx)}
             </div>
+            <span className={`text-[16px] md:text-[18px] transition-all !text-black ${selectedOption === idx ? 'font-black opacity-100' : 'text-slate-700 opacity-80 font-medium'}`}>
+              {opt}
+            </span>
           </button>
         ))}
       </div>

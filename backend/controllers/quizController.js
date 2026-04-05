@@ -5,14 +5,27 @@ export const getQuizByTopic = async (req, res) => {
     const { topic } = req.params;
     const quiz = await Quiz.findOne({ topic });
     if (!quiz) {
-      // Return a dummy quiz for demo if not found
+      // Return a simulated high-quality quiz for demo if specific topic not yet seeded
       return res.status(200).json({
         topic,
-        questions: Array.from({ length: 15 }, (_, i) => ({
-          questionText: `Sample question ${i + 1} about ${topic}?`,
-          options: ["Option A", "Option B", "Option C", "Option D"],
-          correctAnswer: 0
-        }))
+        questions: [
+          {
+            questionText: `Which of the following best describes a core concept of "${topic}" in a professional context?`,
+            options: ["Structural Organization", "Scalability & Performance", "Security Protocols", "All of the Above"],
+            correctAnswer: 3
+          },
+          {
+            questionText: `What is the primary objective of mastering "${topic}" for a modern developer?`,
+            options: ["Legacy Maintenance", "Clean Code Architecture", "Manual Documentation", "Simplistic Scripting"],
+            correctAnswer: 1
+          },
+          {
+            questionText: `In the study of "${topic}", which factor is most critical for long-term system stability?`,
+            options: ["Ad-hoc Patching", "Automated Testing & Validation", "Complex Hierarchy", "Minimal Resource Usage"],
+            correctAnswer: 1
+          },
+          // More simulated questions can be added or dynamically generated
+        ]
       });
     }
     res.status(200).json(quiz);

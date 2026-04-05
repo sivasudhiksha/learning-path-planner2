@@ -123,7 +123,7 @@ function Dashboard() {
               : "Generate your first personalized learning path and start mastering new skills today with a structured timeline."}
           </p>
           
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="pt-4 pb-12 flex flex-col sm:flex-row items-center justify-center gap-4">
             {activePath ? (
               <button 
                 onClick={() => navigate(`/path/${activePath._id}`)}
@@ -146,15 +146,17 @@ function Dashboard() {
 
         {/* 💡 8. MOTIVATIONAL BAR */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 relative z-10">
-          <div className="bg-white rounded-3xl p-6 shadow-xl border border-white/50 flex items-center gap-5 hover:-translate-y-1 transition-all group">
-            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
-              <Flame className="w-8 h-8 text-red-500 animate-pulse" />
+          <div className="bg-white rounded-lg p-6 border-2 border-black flex flex-col justify-center gap-4 transition-all hover:bg-gray-50 shadow-lg">
+            <div className="flex items-center gap-2 text-black font-bold mb-1">
+              <div className="w-8 h-8 rounded-full border border-black/20 bg-black/5 flex items-center justify-center">
+                <Flame className="w-4 h-4 text-black" />
+              </div>
+              <p className="text-[10px] uppercase tracking-widest text-black/60">Current Streak</p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Current Streak</p>
-              <p className="text-2xl font-black text-black">
+              <p className="text-lg font-black text-black">
                 {streak.count > 0 ? (
-                  <>You're on a <span className="text-red-500">{streak.count}-day</span> streak!</>
+                  <>You're on a {streak.count}-day streak!</>
                 ) : (
                   "Start your streak today!"
                 )}
@@ -162,13 +164,15 @@ function Dashboard() {
             </div>
           </div>
           
-          <div className="lg:col-span-2 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 shadow-xl border border-white/10 flex items-center gap-5 text-white hover:-translate-y-1 transition-all">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-inner">
-              <Lightbulb className="w-8 h-8 text-yellow-300" />
+          <div className="lg:col-span-2 bg-white rounded-lg p-6 border-2 border-black flex flex-col justify-center gap-4 transition-all hover:bg-gray-50 shadow-lg">
+            <div className="flex items-center gap-2 text-black font-bold mb-1">
+              <div className="w-8 h-8 rounded-full border border-black/20 bg-black/5 flex items-center justify-center">
+                <Lightbulb className="w-4 h-4 text-black" />
+              </div>
+              <p className="text-[10px] uppercase tracking-widest text-black/60">Tip of the Day</p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Tip of the Day</p>
-              <p className="text-lg md:text-xl font-bold leading-tight drop-shadow-sm">{dailyTip}</p>
+              <p className="text-base font-bold text-black leading-tight">{dailyTip}</p>
             </div>
           </div>
         </div>
@@ -216,61 +220,60 @@ function Dashboard() {
           </div>
         ) : (
           /* Active Path Dashboard Story */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
             
             {/* Current Goal Box */}
-            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 flex flex-col justify-between group hover:-translate-y-1 transition-transform relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"></div>
+            <div className="bg-black p-6 rounded-lg border border-white/10 flex flex-col justify-between transition-all hover:bg-zinc-900 shadow-xl">
                <div className="relative z-10">
-                 <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
-                   <Target className="w-6 h-6 text-blue-600" />
+                 <div className="w-10 h-10 border border-white/20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                   <Target className="w-5 h-5 text-white" />
                  </div>
-                 <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">🎯 Current Goal</p>
-                 <h3 className="text-2xl font-black text-gray-900 leading-tight mb-2">{activePath.role}</h3>
-                 <p className="text-sm font-bold text-blue-600 bg-blue-50 inline-block px-3 py-1 rounded-lg capitalize">{activePath.difficultyLevel} Level</p>
+                 <div className="flex items-center gap-2 mb-2">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">Current Goal</p>
+                 </div>
+                 <h3 className="text-xl font-black text-white leading-tight mb-2">{activePath.role}</h3>
+                 <p className="text-xs font-bold text-white/50 capitalize">{activePath.difficultyLevel} Level</p>
                </div>
             </div>
 
             {/* Current Stage Box */}
-            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 flex flex-col justify-between group hover:-translate-y-1 transition-transform relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"></div>
+            <div className="bg-black p-6 rounded-lg border border-white/10 flex flex-col justify-between transition-all hover:bg-zinc-900 shadow-xl">
                <div className="relative z-10">
-                 <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center mb-6">
-                   <MapPin className="w-6 h-6 text-indigo-600" />
+                 <div className="w-10 h-10 border border-white/20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                   <MapPin className="w-5 h-5 text-white" />
                  </div>
-                 <div className="flex justify-between items-end mb-2">
-                   <p className="text-xs font-bold uppercase tracking-widest text-gray-500">📍 Current Stage</p>
-                   <p className="text-xs font-black text-indigo-600">{completedModules}/{totalModules} Modules</p>
+                 <div className="flex justify-between items-center mb-2">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">Current Stage</p>
+                   <p className="text-[10px] font-bold text-white/40">{completedModules}/{totalModules} Modules</p>
                  </div>
-                 <h3 className="text-xl font-black text-gray-900 leading-tight md:truncate" title={currentStage}>{currentStage}</h3>
+                 <h3 className="text-lg font-black text-white leading-tight mb-4 md:truncate" title={currentStage}>{currentStage}</h3>
                  
-                 {/* 📈 4. PROGRESS VISUALIZATION */}
-                 <div className="mt-6 w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner relative">
+                 {/* 📈 PROGRESS VISUALIZATION */}
+                 <div className="mt-4 w-full bg-white/10 rounded-full h-[2px] overflow-hidden relative">
                     <div 
-                      className="bg-indigo-600 h-full rounded-full transition-all duration-1000 relative overflow-hidden" 
+                      className="bg-white h-full rounded-full transition-all duration-1000 relative" 
                       style={{ width: `${Math.max(progressPct, 5)}%` }}
-                    >
-                      <div className="absolute inset-0 bg-white/20 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
-                    </div>
+                    />
                  </div>
-                 <p className="text-right text-[10px] font-bold text-gray-400 mt-2">{progressPct}% Completed</p>
+                 <p className="text-left text-[10px] font-bold text-white mt-2">{progressPct}% Completed</p>
                </div>
             </div>
 
             {/* Learning Skills Box */}
-            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 flex flex-col justify-between group hover:-translate-y-1 transition-transform relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"></div>
+            <div className="bg-black p-6 rounded-lg border border-white/10 flex flex-col justify-between transition-all hover:bg-zinc-900 shadow-xl">
                <div className="relative z-10 h-full flex flex-col">
-                 <div className="w-12 h-12 bg-teal-100 rounded-2xl flex items-center justify-center mb-6">
-                   <Brain className="w-6 h-6 text-teal-600" />
+                 <div className="w-10 h-10 border border-white/20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                   <Brain className="w-5 h-5 text-white" />
                  </div>
-                 <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">🧠 Skills Being Learned</p>
+                 <div className="flex items-center gap-2 mb-4">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">Skills Being Learned</p>
+                 </div>
                  <div className="flex flex-wrap gap-2 flex-grow content-start">
                    {(activePath.skills || []).slice(0, 5).map(skill => (
-                     <span key={skill} className="bg-white text-gray-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm">{skill}</span>
+                     <span key={skill} className="bg-white/10 text-white text-[10px] font-bold px-3 py-1 border border-white/20 rounded-md shadow-sm">{skill}</span>
                    ))}
                    {(activePath.skills?.length > 5) && (
-                     <span className="bg-gray-50 text-gray-400 text-xs font-bold px-3 py-1.5 rounded-xl border border-gray-100">+{activePath.skills.length - 5}</span>
+                     <span className="bg-white/5 text-white/40 text-[10px] font-bold px-3 py-1 border border-white/10 rounded-md">+{activePath.skills.length - 5}</span>
                    )}
                  </div>
                </div>
@@ -283,26 +286,26 @@ function Dashboard() {
         {activePath && (
           <div 
             onClick={() => navigate(`/path/${activePath._id}`)}
-            className="w-full bg-white rounded-3xl p-6 shadow-xl border-l-[8px] border-l-blue-600 flex flex-col sm:flex-row items-center justify-between cursor-pointer group hover:-translate-y-1 transition-all"
+            className="w-full bg-black mt-4 rounded-lg p-6 border border-white/10 flex flex-col sm:flex-row items-center justify-between cursor-pointer group hover:bg-zinc-900 transition-all shadow-xl"
           >
             <div className="flex items-center gap-5 flex-1 w-full sm:w-auto mb-4 sm:mb-0">
-              <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                {currentStage.includes("Project") ? <Clock className="text-blue-600 w-6 h-6" /> : 
-                 currentStage.includes("Assess") ? <Trophy className="text-blue-600 w-6 h-6" /> : 
-                 currentStage.includes("Certif") ? <CheckCircle2 className="text-green-500 w-6 h-6" /> :
-                 <BookOpen className="text-blue-600 w-6 h-6" />}
+              <div className="w-12 h-12 border border-white/20 bg-white/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                {currentStage.includes("Project") ? <Clock className="text-white w-5 h-5" /> : 
+                 currentStage.includes("Assess") ? <Trophy className="text-white w-5 h-5" /> : 
+                 currentStage.includes("Certif") ? <CheckCircle2 className="text-white w-5 h-5" /> :
+                 <BookOpen className="text-white w-5 h-5" />}
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-1">⏭ Next Action Required</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">Next Action Required</p>
                 <div className="flex items-center gap-3">
-                   <h3 className="text-xl md:text-2xl font-black text-gray-900 group-hover:text-blue-700 transition-colors">{nextAction}</h3>
-                   <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold">~ {activePath.duration} remaining</span>
+                   <h3 className="text-lg font-black text-white group-hover:text-white/80 transition-colors">{nextAction}</h3>
+                   <span className="px-3 py-1 bg-white/10 border border-white/20 text-white/80 rounded-md text-[10px] font-bold shadow-sm">~ {activePath.duration} remaining</span>
                 </div>
               </div>
             </div>
             
-            <button className="w-full sm:w-auto px-6 py-4 bg-gray-900 text-white font-black rounded-2xl flex items-center justify-center gap-2 group-hover:bg-blue-600 transition-colors shadow-lg">
-              Continue <ArrowRight size={18} />
+            <button className="w-full sm:w-auto px-6 py-3 bg-white border border-black text-black font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-zinc-100 transition-colors shadow-lg text-sm">
+              Continue <ArrowRight size={16} />
             </button>
           </div>
         )}

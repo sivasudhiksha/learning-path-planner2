@@ -21,7 +21,8 @@ const ResumeAnalyzer = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/resume/analyze", formData, {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await axios.post(`${baseUrl}/resume/analyze`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -48,16 +49,13 @@ const ResumeAnalyzer = () => {
           <form onSubmit={handleUpload}>
             <div className="mb-6">
               <label className="block text-sm font-medium mb-2">Target Role</label>
-              <select 
-                className="w-full glass-card bg-surface p-3 outline-none border border-border rounded-xl"
+              <input 
+                type="text"
+                className="w-full glass-card bg-surface p-3 outline-none border border-border rounded-xl text-white"
+                placeholder="e.g. Senior Frontend Engineer"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-              >
-                <option>Frontend Developer</option>
-                <option>Backend Developer</option>
-                <option>Full Stack Developer</option>
-                <option>Data Analyst</option>
-              </select>
+              />
             </div>
 
             <div className={`mb-8 p-12 border-2 border-dashed rounded-3xl text-center transition-all cursor-pointer relative group ${file ? 'border-primary bg-primary/5' : 'border-white/20 hover:border-primary/50 hover:bg-surface/50'}`}>
@@ -92,31 +90,57 @@ const ResumeAnalyzer = () => {
               </h2>
               
               <div className="mb-6">
+                <p className="text-sm font-medium mb-3">AI Alignment Score</p>
+                <div className="relative pt-1">
+                  <div className="flex mb-2 items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-primary bg-primary/20">
+                        {result.alignmentScore}% Match
+                      </span>
+                    </div>
+                  </div>
+                  <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-white/10">
+                    <div style={{ width: `${result.alignmentScore}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary transition-all duration-1000"></div>
+                  </div>
+                </div>
+              </div>
+
+              {result.alignmentSuggestions && (
+                <div className="mb-8 p-6 bg-primary/5 rounded-2xl border border-primary/10 shadow-sm">
+                  <p className="text-sm font-bold mb-4 flex items-center gap-2 text-primary">
+                    <Sparkles className="w-5 h-5" /> Expert Coach's Suggestions
+                  </p>
+                  <div className="text-sm leading-relaxed text-white/90 whitespace-pre-wrap font-medium">
+                    {result.alignmentSuggestions}
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-6">
                 <p className="text-sm font-medium mb-3">Detected Skills</p>
                 <div className="flex flex-wrap gap-2">
                   {result.extractedSkills.map(skill => (
-                    <span key={skill} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs flex items-center gap-1">
+                    <span key={skill} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs flex items-center gap-1 border border-primary/30">
                       <CheckCircle className="w-3 h-3" /> {skill}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-6 text-white/80">
                 <p className="text-sm font-medium mb-3">Missing Skills</p>
                 <div className="flex flex-wrap gap-2">
                   {result.missingSkills.map(skill => (
-                    <span key={skill} className="px-3 py-1 bg-secondary/20 text-secondary rounded-full text-xs flex items-center gap-1">
+                    <span key={skill} className="px-3 py-1 bg-secondary/20 text-secondary rounded-full text-xs flex items-center gap-1 border border-secondary/30">
                       <XCircle className="w-3 h-3" /> {skill}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="mt-10 p-6 bg-gradient-to-r from-accent/20 to-primary/10 border border-accent/30 rounded-2xl shadow-inner">
-                <p className="text-[15px] font-medium leading-relaxed text-white">
-                  <span className="text-accent font-black text-xl mr-2">"{Math.round((result.extractedSkills.length / (result.extractedSkills.length + result.missingSkills.length)) * 100)}% Match"</span> 
-                  You are well on your way! We've generated a suggested roadmap for you based on these missing skills.
+              <div className="mt-10 p-6 bg-gradient-to-r from-accent/20 to-primary/10 border border-accent/20 rounded-2xl shadow-xl">
+                <p className="text-[14px] font-medium leading-relaxed text-white">
+                   We've analyzed your resume for the **{result.role}** role. You have a solid foundation, and we've generated a suggested roadmap to help you bridge the gap!
                 </p>
               </div>
             </div>

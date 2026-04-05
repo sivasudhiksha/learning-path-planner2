@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const stepSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  status: { type: String, enum: ["pending", "in-progress", "completed"], default: "pending" },
+  status: { type: String, enum: ["not_started", "in_progress", "completed", "overdue"], default: "not_started" },
   resourceVideo: { type: String }, // Keep for legacy
   resourceVideos: [{ type: String }], // Array of YouTube IDs or search queries
   resourceText: { type: String }, // Markdown content or URL
@@ -12,6 +12,7 @@ const stepSchema = new mongoose.Schema({
   projectVerified: { type: Boolean, default: false },
   githubRepo: { type: String },
   scheduledDate: { type: Date },
+  completedDate: { type: Date },
 });
 
 const learningPathSchema = new mongoose.Schema({
@@ -25,6 +26,7 @@ const learningPathSchema = new mongoose.Schema({
   preference: { type: String }, // e.g., "Video", "Reading", "Both"
   steps: [stepSchema],
   pathCompleted: { type: Boolean, default: false },
+  aiSuggestions: { type: String }, // AI-generated advice based on pace
   createdAt: { type: Date, default: Date.now },
 });
 

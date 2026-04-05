@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,6 +15,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor for 401s
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authService = {
   register: (userData) => api.post('/auth/register', userData),
   login: (userData) => api.post('/auth/login', userData),
@@ -25,6 +38,7 @@ export const learningPathService = {
   getById: (id) => api.get(`/paths/${id}`),
   create: (data) => api.post('/paths', data),
   update: (id, data) => api.put(`/paths/${id}`, data),
+  adaptiveUpdate: (id) => api.post(`/paths/${id}/update`),
 };
 
 export const noteService = {

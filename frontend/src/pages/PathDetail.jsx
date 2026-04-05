@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Trophy, CheckCircle, Circle, BookMarked, StickyNote, Github, ExternalLink, Plus, Trash2, Loader2, Play, BookOpen, PenTool, CheckSquare, Sparkles, TrendingUp, LayoutDashboard, Calendar, Clock, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { format, differenceInDays, isBefore, addDays } from "date-fns";
+import { Trophy, CheckCircle, Circle, BookMarked, StickyNote, Github, ExternalLink, Plus, Trash2, Loader2, Play, BookOpen, PenTool, CheckSquare, Sparkles, TrendingUp, LayoutDashboard, Calendar, Clock, AlertCircle, RefreshCw, MessageSquare } from "lucide-react";
 import { noteService, bookmarkService, githubService, learningPathService, quizService, streakService } from "../services/api";
 import QuizComponent from "../components/QuizComponent";
 
@@ -15,6 +17,7 @@ const PathDetail = () => {
   const [githubUrl, setGithubUrl] = useState("");
   const [githubLoading, setGithubLoading] = useState(false);
   const [verificationResult, setVerificationResult] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
  
   const updateStepDate = async (stepIndex, newDate) => {
     try {
@@ -31,7 +34,11 @@ const PathDetail = () => {
   const handleStepUpdate = async (updates) => {
     try {
       const updatedSteps = [...path.steps];
-      updatedSteps[selectedStepIndex] = { ...updatedSteps[selectedStepIndex], ...updates };
+      const finalUpdates = { ...updates };
+      if (updates.status === 'completed' && !updatedSteps[selectedStepIndex].completedDate) {
+        finalUpdates.completedDate = new Date();
+      }
+      updatedSteps[selectedStepIndex] = { ...updatedSteps[selectedStepIndex], ...finalUpdates };
       const res = await learningPathService.update(id, { steps: updatedSteps });
       setPath(res.data);
     } catch (err) {
@@ -49,6 +56,21 @@ const PathDetail = () => {
     }
   };
 
+  const handleAdaptiveUpdate = async () => {
+    setIsUpdating(true);
+    try {
+      const res = await learningPathService.adaptiveUpdate(id);
+      setPath(res.data);
+      setSelectedStepIndex(0); // Reset to first pending step
+      alert("Your roadmap has been intelligently updated based on your progress!");
+    } catch (err) {
+      console.error("Failed to update roadmap", err);
+      alert("Failed to intelligently update roadmap. Please try again later.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const getStepStatus = (step) => {
     if (step.status === 'completed') return { label: 'Completed', color: 'text-green-400', icon: <CheckCircle size={14}/> };
     if (!step.scheduledDate) return { label: 'Not Scheduled', color: 'text-slate-500', icon: <Clock size={14}/> };
@@ -57,12 +79,32 @@ const PathDetail = () => {
     today.setHours(0,0,0,0);
     const scheduled = new Date(step.scheduledDate);
     scheduled.setHours(0,0,0,0);
-    const diffTime = scheduled - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const diffDays = differenceInDays(scheduled, today);
     
     if (diffDays < 0) return { label: `${Math.abs(diffDays)} Days Overdue`, color: 'text-red-400', icon: <AlertCircle size={14}/> };
     if (diffDays === 0) return { label: 'Due Today', color: 'text-yellow-400', icon: <Clock size={14}/> };
     return { label: `Due in ${diffDays} Days`, color: 'text-primary', icon: <Calendar size={14}/> };
+  };
+
+  const getOverallPace = () => {
+    if (!path || !path.steps) return { label: "On Track", color: "text-white/60", bg: "bg-white/5" };
+    
+    const overdueCount = path.steps.filter(s => {
+      if (s.status === 'completed' || !s.scheduledDate) return false;
+      return isBefore(new Date(s.scheduledDate), new Date());
+    }).length;
+
+    if (overdueCount > 1) return { label: "Behind", color: "text-red-400", bg: "bg-red-400/10" };
+    
+    const earlyCount = path.steps.filter(s => {
+      if (s.status !== 'completed' || !s.scheduledDate || !s.completedDate) return false;
+      return isBefore(new Date(s.completedDate), new Date(s.scheduledDate));
+    }).length;
+
+    if (earlyCount > 1) return { label: "Ahead", color: "text-green-400", bg: "bg-green-400/10" };
+    
+    return { label: "On Track", color: "text-yellow-400", bg: "bg-yellow-400/10" };
   };
 
   // Calculate overall progress percentage
@@ -204,30 +246,44 @@ const PathDetail = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-6 animate-fade-in font-outfit relative">
+    <div className="max-w-6xl mx-auto py-8 px-6 animate-fade-in font-outfit relative">
       
       {/* Dynamic Global Progress Bar */}
-      <div className="sticky top-20 z-40 mb-10 -mx-6 px-6">
-        <div className="glass-card p-4 flex items-center justify-between border-primary/30 bg-primary/5 backdrop-blur-xl">
+      <div className="sticky top-20 z-40 mb-8 w-full bg-black border border-white/20 rounded-xl p-3 md:p-4 shadow-[4px_4px_0px_0px_rgba(255,255,255,0.05)] hover:shadow-none transition-all duration-300 relative overflow-hidden group">
+        
+        <div className="flex flex-col md:flex-row items-start justify-between gap-6 relative z-10">
+          
           <div className="flex items-center gap-4">
-            <div className="p-2 bg-primary/20 rounded-xl">
-              <TrendingUp className="text-primary" size={20} />
+            <div className="w-10 h-10 border border-white/30 rounded-full flex items-center justify-center bg-black shrink-0 shadow-[2px_2px_0px_0px_rgba(255,255,255,0.1)]">
+              <TrendingUp className="text-white w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Path Progress</p>
-              <p className="text-lg font-bold text-slate-900 leading-none">{calcProgress()}% Mastered</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Path Progress</p>
+              <h2 className="text-lg font-black text-white leading-none m-0">{calcProgress()}% Mastered</h2>
             </div>
           </div>
-          <div className="flex-1 max-w-md mx-8 relative h-3 bg-white rounded-full overflow-hidden border border-slate-200">
-            <div 
-              className="h-full bg-gradient-to-r from-primary via-accent to-secondary shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)] transition-all duration-1000 ease-out" 
-              style={{ width: `${calcProgress()}%` }}
-            />
+          
+          <div className="flex-1 w-full max-w-xl px-0 md:px-2">
+             <div className="w-full relative h-[4px] bg-white/10 border border-white/20 rounded-full overflow-hidden mb-2 shadow-inner">
+                <div 
+                  className="h-full bg-white transition-all duration-1000 ease-out" 
+                  style={{ width: `${calcProgress()}%` }}
+                />
+             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Sparkles className="text-yellow-400 animate-pulse" size={18} />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Level: {path.difficultyLevel}</span>
+
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-2 ${getOverallPace().bg} border border-white/20 px-3 py-1.5 rounded-lg shrink-0 shadow-[2px_2px_0px_0px_rgba(255,255,255,0.05)]`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${getOverallPace().color.replace('text-', 'bg-')} animate-pulse`} />
+              <span className={`text-[10px] font-black uppercase tracking-widest leading-none ${getOverallPace().color}`}>{getOverallPace().label}</span>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-black border border-white/30 px-3 py-1.5 rounded-lg shrink-0 shadow-[2px_2px_0px_0px_rgba(255,255,255,0.1)]">
+              <Sparkles className="text-white w-3 h-3" />
+              <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Level: <span className="text-white/60 capitalize">{path.difficultyLevel}</span></span>
+            </div>
           </div>
+
         </div>
       </div>
 
@@ -236,12 +292,31 @@ const PathDetail = () => {
         {/* Sidebar - Roadmap Card */}
         <div className="w-full lg:w-96 space-y-6">
           <div className="glass-card p-0 overflow-hidden border-slate-200 shadow-2xl group">
-            <div className="p-8 bg-gradient-to-br from-primary/20 to-accent/10 border-b border-slate-200 relative">
+            <div className="p-6 bg-gradient-to-br from-primary/20 to-accent/10 border-b border-slate-200 relative">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <LayoutDashboard size={80} />
+                <LayoutDashboard size={60} />
               </div>
-              <h2 className="text-2xl font-black mb-2 text-slate-900 leading-tight">{path.title}</h2>
-              <p className="text-sm text-slate-500 leading-relaxed line-clamp-2">{path.description}</p>
+              <div className="flex flex-col gap-2">
+                <h2 className="text-xl font-black text-slate-900 leading-tight pr-10">{path.title}</h2>
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">AI Adaptive Path Enabled</span>
+                </div>
+              </div>
+              <p className="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mt-4">{path.description}</p>
+            </div>
+
+            <div className="px-6 py-4 border-b border-slate-100 bg-white">
+              <button 
+                onClick={handleAdaptiveUpdate}
+                disabled={isUpdating}
+                className="w-full flex items-center justify-center gap-3 bg-black text-white hover:bg-slate-800 px-4 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all duration-300 shadow-xl hover:shadow-black/20 group/refresh-main disabled:opacity-50"
+              >
+                <div className={`p-1.5 rounded-lg bg-white/10 group-hover/refresh-main:bg-primary/20 transition-colors ${isUpdating ? 'animate-spin' : ''}`}>
+                  <RefreshCw size={14} className={isUpdating ? '' : 'group-hover/refresh-main:rotate-180 transition-transform duration-500'} />
+                </div>
+                {isUpdating ? 'Recalculating...' : 'Update Roadmap'}
+              </button>
             </div>
 
             <div className="p-6 space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
@@ -274,16 +349,25 @@ const PathDetail = () => {
                       }`}>
                         {step.status === 'completed' 
                           ? <CheckCircle size={16} /> 
-                          : <div className="text-[10px] font-bold">{idx + 1}</div>
+                          : step.status === 'overdue'
+                            ? <AlertCircle size={16} className="text-red-500" />
+                            : <div className="text-[10px] font-bold">{idx + 1}</div>
                         }
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <span className={`block text-sm font-bold transition-colors ${selectedStepIndex === idx ? 'text-slate-900' : 'group-hover/btn:text-slate-900'}`}>
                           {step.title}
                         </span>
-                        <span className="text-[10px] uppercase font-bold opacity-50">
-                          {step.status === 'completed' ? 'Verified' : canAccess ? 'In Progress' : 'Locked'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] uppercase font-black ${
+                            step.status === 'completed' ? 'text-green-500' : 
+                            step.status === 'overdue' ? 'text-red-500' :
+                            canAccess ? 'text-primary' : 'text-slate-400'
+                          }`}>
+                            {step.status === 'completed' ? 'Verified' : step.status === 'overdue' ? 'Overdue' : canAccess ? 'In Progress' : 'Locked'}
+                          </span>
+                          {step.status === 'completed' && <div className="w-1 h-1 rounded-full bg-green-500" />}
+                        </div>
                       </div>
                     </button>
                   );
@@ -329,10 +413,10 @@ const PathDetail = () => {
           <div className="transition-all duration-500">
             {activeTab === "learn" && (
               <div className="glass-card p-0 animate-fade-in border-primary/20 overflow-hidden shadow-2xl">
-                <div className="p-10 border-b border-slate-200">
+                <div className="p-8 border-b border-slate-200">
                   <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h3 className="text-3xl font-black text-slate-900 mb-2 leading-tight">{currentStep.title}</h3>
+                      <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight">{currentStep.title}</h3>
                       <p className="text-slate-500 text-sm max-w-lg">Master this fundamental skill with our professional training and hands-on laboratory.</p>
                     </div>
                     <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary border border-primary/20">
@@ -345,23 +429,30 @@ const PathDetail = () => {
                         <div className="p-6 bg-red-50 rounded-3xl border border-red-100 shadow-sm">
                            <h4 className="flex items-center gap-2 text-red-600 font-black mb-4 text-sm tracking-widest"><Play size={18} fill="currentColor"/> RECOMMENDED YOUTUBE RESOURCES</h4>
                            <div className="flex flex-col gap-3">
-                              {currentStep.resourceVideos.map((vid, idx) => (
-                                <a 
-                                  key={idx} 
-                                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(vid)}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="px-5 py-4 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-between border border-gray-100 hover:border-red-300 hover:shadow-md transition-all group"
-                                >
-                                   <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 group-hover:scale-110 transition-transform">
-                                          <Play size={14} fill="currentColor" />
+                                {currentStep.resourceVideos.map((vid, idx) => {
+                                  const isID = /^[a-zA-Z0-9_-]{11}$/.test(vid);
+                                  const href = isID 
+                                    ? `https://www.youtube.com/watch?v=${vid}` 
+                                    : `https://www.youtube.com/results?search_query=${encodeURIComponent(vid)}`;
+                                  const label = isID ? `Mastery Video ${idx + 1}` : vid;
+                                  return (
+                                    <a 
+                                      key={idx} 
+                                      href={href} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="px-5 py-4 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-between border border-gray-100 hover:border-red-300 hover:shadow-md transition-all group"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                         <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 group-hover:scale-110 transition-transform">
+                                             <Play size={14} fill="currentColor" />
+                                         </div>
+                                         <span className="capitalize">{label}</span>
                                       </div>
-                                      <span>{vid}</span>
-                                   </div>
-                                   <ExternalLink size={18} className="text-gray-400 group-hover:text-red-500 transition-colors" />
-                                </a>
-                              ))}
+                                      <ExternalLink size={18} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+                                   </a>
+                                 );
+                               })}
                            </div>
                         </div>
                      ) : (
@@ -415,6 +506,16 @@ const PathDetail = () => {
                         </button>
                       </div>
                     </div>
+                    
+                    <div className="mt-8 flex items-center justify-center">
+                      <button 
+                        onClick={() => setActiveTab("planner")}
+                        className="text-[11px] font-black text-slate-400 hover:text-primary flex items-center gap-2 transition-colors group"
+                      >
+                        <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-500" />
+                        STUCK OR AHEAD? UPDATE YOUR SCHEDULE IN PLANNER
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -423,13 +524,23 @@ const PathDetail = () => {
             {activeTab === "planner" && (
               <div className="space-y-8 animate-fade-in">
                 <div className="glass-card p-10 border-primary/20 bg-primary/5">
-                  <div className="flex items-center justify-between mb-10">
+                  <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
                     <div>
                       <h3 className="text-3xl font-black text-slate-900 mb-2 leading-tight">Study Planner</h3>
                       <p className="text-slate-500 text-sm">Schedule your milestones to stay on track and master your skills faster.</p>
                     </div>
-                    <div className="p-4 bg-primary/20 rounded-2xl border border-primary/10">
-                      <Clock className="text-primary animate-pulse" size={24} />
+                    <div className="flex items-center gap-3">
+                       <button 
+                        onClick={handleAdaptiveUpdate}
+                        disabled={isUpdating}
+                        className="flex items-center gap-3 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
+                        Update Roadmap
+                      </button>
+                      <div className="p-4 bg-primary/20 rounded-2xl border border-primary/10">
+                        <Clock className="text-primary animate-pulse" size={24} />
+                      </div>
                     </div>
                   </div>
 
@@ -443,24 +554,24 @@ const PathDetail = () => {
                             step.status === 'completed' ? 'bg-green-500 scale-125' : 'bg-primary group-hover/step:scale-125'
                           }`} />
                           
-                          <div className="glass-card p-6 border-slate-200 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-500 group-hover/step:translate-x-2">
+                          <div className="bg-black p-6 rounded-2xl border border-white/20 transition-all duration-500 group-hover/step:translate-x-2 shadow-[4px_4px_0px_0px_rgba(255,255,255,0.05)]">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                               <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Milestone {idx + 1}</span>
-                                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold ${status.color}`}>
-                                    {status.icon} {status.label}
+                                <div className="flex flex-wrap items-center gap-4 mb-3">
+                                  <span className="text-sm font-black text-white/90 mr-4 uppercase tracking-[0.1em]">Milestone {idx + 1}</span>
+                                  <div className={`flex items-center gap-2 text-sm font-bold ${status.color}`}>
+                                    {status.icon} <span>{status.label}</span>
                                   </div>
                                 </div>
-                                <h4 className="text-lg font-bold text-slate-900 group-hover/step:text-primary transition-colors">{step.title}</h4>
-                                <p className="text-xs text-slate-500 line-clamp-1 mt-1">Master this core concept on your journey to mastery.</p>
+                                <h4 className="text-xl font-black text-white group-hover/step:text-white/80 transition-colors">{step.title}</h4>
+                                <p className="text-sm text-white/50 line-clamp-1 mt-1">Master this core concept on your journey to mastery.</p>
                               </div>
 
-                              <div className="flex items-center gap-4 bg-slate-100 p-3 rounded-2xl border border-slate-200 border-dashed group-hover/step:border-primary/30 transition-all">
-                                <span className="text-[10px] font-black text-slate-500 uppercase px-2">Scheduled For</span>
+                              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 transition-all">
+                                <span className="text-[10px] font-black text-white/60 uppercase px-2">Scheduled For</span>
                                 <input 
                                   type="date" 
-                                  className="bg-transparent border-none text-slate-900 text-xs font-bold focus:ring-0 cursor-pointer min-w-[130px]"
+                                  className="bg-transparent border-none text-white text-xs font-bold focus:ring-0 cursor-pointer min-w-[130px] invert"
                                   value={step.scheduledDate ? new Date(step.scheduledDate).toISOString().split('T')[0] : ""}
                                   onChange={(e) => updateStepDate(idx, e.target.value)}
                                 />
@@ -584,6 +695,67 @@ const PathDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Suggestions Section */}
+      {path.aiSuggestions && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-12 glass-card p-8 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 p-8 opacity-5">
+            <MessageSquare size={120} />
+          </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center text-primary border border-white/10 shrink-0">
+               <Sparkles size={32} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-slate-900 mb-2 flex items-center gap-2">
+                Coach's Strategy Suggestions
+              </h3>
+              <p className="text-slate-500 text-sm leading-relaxed italic">
+                "{path.aiSuggestions}"
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Intelligent Update Overlay */}
+      <AnimatePresence>
+        {isUpdating && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 text-center"
+          >
+            <div className="max-w-md w-full">
+               <div className="relative w-24 h-24 mx-auto mb-8">
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full"
+                  />
+                  <div className="absolute inset-4 bg-primary/10 rounded-full flex items-center justify-center">
+                     <RefreshCw className="text-primary animate-pulse" size={32} />
+                  </div>
+               </div>
+               <h2 className="text-2xl font-black text-white mb-4">Regenerating Your Roadmap</h2>
+               <p className="text-white/60 mb-8 whitespace-pre-wrap">Our AI is analyzing your progress and recalculating the optimal learning path for you...</p>
+               <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 5, ease: "easeInOut" }}
+                    className="h-full bg-primary"
+                  />
+               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

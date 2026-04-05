@@ -7,6 +7,8 @@ const resumeSchema = new mongoose.Schema({
   extractedSkills: [String],
   role: { type: String },
   missingSkills: [String],
+  alignmentScore: { type: Number, default: 0 },
+  alignmentSuggestions: { type: String },
   suggestedRoadmap: { type: mongoose.Schema.Types.ObjectId, ref: "LearningPath" },
   createdAt: { type: Date, default: Date.now },
 });
