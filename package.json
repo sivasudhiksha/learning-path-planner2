@@ -1,0 +1,17 @@
+{
+  "name": "learning-path-planner-unified",
+  "version": "1.0.0",
+  "description": "Unified deployment for Learning Path Planner",
+  "main": "backend/server.js",
+  "type": "module",
+  "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build-frontend": "cd frontend && npm run build",
+    "start": "node backend/server.js",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "build": "npm run build-frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

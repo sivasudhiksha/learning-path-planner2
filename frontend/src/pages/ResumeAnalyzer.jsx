@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Upload, CheckCircle, XCircle, Loader2, Sparkles, Target } from "lucide-react";
 import axios from "axios";
 
@@ -8,6 +9,14 @@ const ResumeAnalyzer = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token || token === "null") {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -21,7 +30,7 @@ const ResumeAnalyzer = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
       const res = await axios.post(`${baseUrl}/resume/analyze`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",

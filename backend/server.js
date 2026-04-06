@@ -2,7 +2,13 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+dotenv.config();
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import routes
 import authRoutes from "./routes/authRoutes.js";
@@ -17,7 +23,7 @@ import githubRoutes from "./routes/githubRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
-dotenv.config();
+
 
 const app = express();
 
@@ -39,8 +45,18 @@ app.use("/api/github", githubRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/users", userRoutes);
 
-// Test root route
-app.get("/", (req, res) => res.send("API is running..."));
+// Serve Frontend in Production
+if (process.env.NODE_ENV === "production") {
+  // Set static folder
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
+  });
+} else {
+  // Test root route for dev
+  app.get("/", (req, res) => res.send("API is running..."));
+}
 
 // Connect MongoDB and start server
 const startServer = async () => {
